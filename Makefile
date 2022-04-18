@@ -51,9 +51,10 @@ $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 docker_container: $(DOCKER_CONTAINER)
 
 DOCKER_CONTAINER_ID = $(shell docker container ls --quiet --all --filter name=^/$(DOCKER_CONTAINER_NAME)$)
-DOCKER_CONTAINER_CREATE_STATUS = $(shell [[ -z "$(DOCKER_CONTAINER_ID)" ]] && echo "$(DOCKER_CONTAINER)_not_created")
-.PHONY: $(DOCKER_CONTAINER)_not_created
-$(DOCKER_CONTAINER): $(DOCKER_IMAGE) $(DOCKER_CONTAINER_CREATE_STATUS)
+DOCKER_CONTAINER_STATE = $(shell docker container ls --format {{.State}} --all --filter name=^/$(DOCKER_CONTAINER_NAME)$)
+DOCKER_CONTAINER_RUN_STATUS = $(shell [[ "$(DOCKER_CONTAINER_STATE)" != "running" ]] && echo "$(DOCKER_CONTAINER)_not_running")
+.PHONY: $(DOCKER_CONTAINER)_not_running
+$(DOCKER_CONTAINER): $(DOCKER_IMAGE) $(DOCKER_CONTAINER_RUN_STATUS)
 ifneq ($(DOCKER_CONTAINER_ID),)
 	docker container rename $(DOCKER_CONTAINER_NAME) $(DOCKER_CONTAINER_NAME)_$(DOCKER_CONTAINER_ID)
 endif
@@ -68,9 +69,10 @@ endif
 docker_test_container: $(DOCKER_TEST_CONTAINER)
 
 DOCKER_TEST_CONTAINER_ID = $(shell docker container ls --quiet --all --filter name=^/$(DOCKER_TEST_CONTAINER_NAME)$)
-DOCKER_TEST_CONTAINER_CREATE_STATUS = $(shell [[ -z "$(DOCKER_TEST_CONTAINER_ID)" ]] && echo "$(DOCKER_TEST_CONTAINER)_not_created")
-.PHONY: $(DOCKER_TEST_CONTAINER)_not_created
-$(DOCKER_TEST_CONTAINER): $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER_CREATE_STATUS)
+DOCKER_TEST_CONTAINER_STATE = $(shell docker container ls --format {{.State}} --all --filter name=^/$(DOCKER_TEST_CONTAINER_NAME)$)
+DOCKER_TEST_CONTAINER_RUN_STATUS = $(shell [[ "$(DOCKER_TEST_CONTAINER_STATE)" != "running" ]] && echo "$(DOCKER_TEST_CONTAINER)_not_running")
+.PHONY: $(DOCKER_TEST_CONTAINER)_not_running
+$(DOCKER_TEST_CONTAINER): $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER_RUN_STATUS)
 ifneq ($(DOCKER_TEST_CONTAINER_ID),)
 	docker container rename $(DOCKER_TEST_CONTAINER_NAME) $(DOCKER_TEST_CONTAINER_NAME)_$(DOCKER_TEST_CONTAINER_ID)
 endif
@@ -149,10 +151,8 @@ clean:
 	rm --force $(BUILD_DIR)/*.fdb_latexmk
 	rm --force $(BUILD_DIR)/*.fls
 	rm --force $(BUILD_DIR)/*.log
-	rm --force $(BUILD_DIR)/*.pdf
-	rm --force $(BUILD_DIR)/$(DOCKER_TEST_CONTAINER_NAME)*
-	docker container ls --quiet --filter name=$(DOCKER_TEST_CONTAINER_NAME) | \
+	docker container ls --quiet --filter name=$(DOCKER_TEST_CONTAINER_NAME)_ | \
 		ifne xargs docker stop
-	docker container ls --quiet --filter name=$(DOCKER_TEST_CONTAINER_NAME) --all | \
+	docker container ls --quiet --filter name=$(DOCKER_TEST_CONTAINER_NAME)_ --all | \
 		ifne xargs docker rm
 
