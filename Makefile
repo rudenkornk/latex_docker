@@ -8,6 +8,8 @@ BUILD_DATE ?= $(shell date --rfc-3339=date)
 BUILD_DATE := $(BUILD_DATE)
 BUILD_DIR ?= build
 BUILD_DIR := $(BUILD_DIR)
+TESTS_DIR ?= tests
+TESTS_DIR := $(TESTS_DIR)
 CI_BIND_MOUNT ?= $(shell pwd)
 CI_BIND_MOUNT := $(CI_BIND_MOUNT)
 DOCKER_BASE_NAME ?= docker_latex
@@ -18,6 +20,8 @@ DOCKER_IMAGE := $(BUILD_DIR)/$(DOCKER_BASE_NAME)_image_$(VERSION)
 DOCKER_CONTAINER_NAME ?= $(DOCKER_BASE_NAME)_container
 DOCKER_CONTAINER_NAME := $(DOCKER_CONTAINER_NAME)
 DOCKER_CONTAINER := $(BUILD_DIR)/$(DOCKER_CONTAINER_NAME)_$(VERSION)
+DOCKER_TEST_CONTAINER_NAME := $(DOCKER_BASE_NAME)_test_container
+DOCKER_TEST_CONTAINER := $(BUILD_DIR)/$(DOCKER_TEST_CONTAINER_NAME)_$(VERSION)
 
 DOCKER_DEPS :=
 DOCKER_DEPS += Dockerfile
@@ -59,4 +63,96 @@ endif
 		--mount type=bind,source="$(CI_BIND_MOUNT)",target=/home/repo \
 		$(DOCKER_IMAGE_TAG)
 	mkdir --parents $(BUILD_DIR) && touch $@
+
+.PHONY: docker_test_container
+docker_test_container: $(DOCKER_TEST_CONTAINER)
+
+DOCKER_TEST_CONTAINER_ID = $(shell docker container ls --quiet --all --filter name=^/$(DOCKER_TEST_CONTAINER_NAME)$)
+DOCKER_TEST_CONTAINER_CREATE_STATUS = $(shell [[ -z "$(DOCKER_TEST_CONTAINER_ID)" ]] && echo "$(DOCKER_TEST_CONTAINER)_not_created")
+.PHONY: $(DOCKER_TEST_CONTAINER)_not_created
+$(DOCKER_TEST_CONTAINER): $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER_CREATE_STATUS)
+ifneq ($(DOCKER_TEST_CONTAINER_ID),)
+	docker container rename $(DOCKER_TEST_CONTAINER_NAME) $(DOCKER_TEST_CONTAINER_NAME)_$(DOCKER_TEST_CONTAINER_ID)
+endif
+	docker run --interactive --tty --detach \
+		--env CI_UID="$$(id --user)" --env CI_GID="$$(id --group)" \
+		--name $(DOCKER_TEST_CONTAINER_NAME) \
+		--mount type=bind,source="$$(pwd)",target=/home/repo \
+		$(DOCKER_IMAGE_TAG)
+	mkdir -p $(BUILD_DIR) && touch $@
+
+$(BUILD_DIR)/drawio_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/drawio_test.xml
+	docker exec \
+		$(DOCKER_TEST_CONTAINER_NAME) \
+		bash -c "source ~/.profile && \$$DRAWIO_CMD --export --output $@ $(TESTS_DIR)/drawio_test.xml --no-sandbox"
+	file $@ | grep --quiet ' PDF '
+
+$(BUILD_DIR)/latex_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/latex_test.tex
+	docker exec \
+		$(DOCKER_TEST_CONTAINER_NAME) \
+		latexmk -pdf --output-directory=$(BUILD_DIR) $(TESTS_DIR)/latex_test.tex
+	touch $@ && file $@ | grep --quiet ' PDF '
+
+$(BUILD_DIR)/env_test: $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER)
+	docker exec \
+		$(DOCKER_TEST_CONTAINER_NAME) \
+		bash -c "source ~/.profile && env" | grep --quiet DRAWIO_CMD
+	docker run \
+		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
+		$(DOCKER_IMAGE_TAG) \
+		env | grep --quiet DRAWIO_CMD
+	docker exec \
+		$(DOCKER_TEST_CONTAINER_NAME) \
+		pwd | grep --quiet /home/repo
+	docker run \
+		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
+		$(DOCKER_IMAGE_TAG) \
+		pwd | grep --quiet /home/repo
+	touch $@
+
+$(BUILD_DIR)/ci_id_test: $(DOCKER_IMAGE) $(TESTS_DIR)/id_test.sh
+	docker run \
+		--env CI_UID="1234" --env CI_GID="1432" \
+		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
+		--mount type=bind,source="$$(pwd)",target=/home/repo \
+		$(DOCKER_IMAGE_TAG) \
+		./$(TESTS_DIR)/id_test.sh &> $(BUILD_DIR)/ci_id
+	sed -n "1p" < $(BUILD_DIR)/ci_id | grep --quiet "1234:1432"
+	sed -n "2p" < $(BUILD_DIR)/ci_id | grep --quiet "ci_user:ci_user"
+	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "sudo"
+	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "docker"
+	# check we did not change host directory ownership
+	stat --format="%U:%G" . | grep --quiet $$(id --user --name):$$(id --group --name)
+	docker run \
+		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
+		--mount type=bind,source="$$(pwd)",target=/home/repo \
+		$(DOCKER_IMAGE_TAG) \
+		./$(TESTS_DIR)/id_test.sh &> $(BUILD_DIR)/ci_id
+	sed -n "2p" < $(BUILD_DIR)/ci_id | grep --quiet "ci_user:ci_user"
+	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "sudo"
+	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "docker"
+	touch $@
+
+
+.PHONY: check
+check: \
+	$(BUILD_DIR)/drawio_test.pdf \
+	$(BUILD_DIR)/latex_test.pdf \
+	$(BUILD_DIR)/env_test \
+	$(BUILD_DIR)/ci_id_test \
+
+
+.PHONY: clean
+clean:
+	rm --force $(BUILD_DIR)/*.aux
+	rm --force $(BUILD_DIR)/*.bbl
+	rm --force $(BUILD_DIR)/*.fdb_latexmk
+	rm --force $(BUILD_DIR)/*.fls
+	rm --force $(BUILD_DIR)/*.log
+	rm --force $(BUILD_DIR)/*.pdf
+	rm --force $(BUILD_DIR)/$(DOCKER_TEST_CONTAINER_NAME)*
+	docker container ls --quiet --filter name=$(DOCKER_TEST_CONTAINER_NAME) | \
+		ifne xargs docker stop
+	docker container ls --quiet --filter name=$(DOCKER_TEST_CONTAINER_NAME) --all | \
+		ifne xargs docker rm
 
