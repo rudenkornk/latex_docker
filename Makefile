@@ -81,7 +81,7 @@ endif
 		--name $(DOCKER_TEST_CONTAINER_NAME) \
 		--mount type=bind,source="$$(pwd)",target=/home/repo \
 		$(DOCKER_IMAGE_TAG)
-	mkdir -p $(BUILD_DIR) && touch $@
+	mkdir --parents $(BUILD_DIR) && touch $@
 
 $(BUILD_DIR)/drawio_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/drawio_test.xml
 	docker exec \
@@ -110,7 +110,7 @@ $(BUILD_DIR)/env_test: $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER)
 		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
 		$(DOCKER_IMAGE_TAG) \
 		pwd | grep --quiet /home/repo
-	touch $@
+	mkdir --parents $(BUILD_DIR) && touch $@
 
 $(BUILD_DIR)/ci_id_test: $(DOCKER_IMAGE) $(TESTS_DIR)/id_test.sh
 	docker run \
@@ -133,7 +133,7 @@ $(BUILD_DIR)/ci_id_test: $(DOCKER_IMAGE) $(TESTS_DIR)/id_test.sh
 	sed -n "2p" < $(BUILD_DIR)/ci_id | grep --quiet "ci_user:ci_user"
 	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "sudo"
 	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "docker"
-	touch $@
+	mkdir --parents $(BUILD_DIR) && touch $@
 
 
 .PHONY: check
