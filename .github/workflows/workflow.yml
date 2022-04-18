@@ -1,0 +1,34 @@
+name: Workflow
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Check status
+      run: |
+        id
+        df -h
+        docker image ls
+        docker container ls
+        docker container ls --all
+    - name: Install prerequisites
+      run: |
+        sudo apt-get install \
+          moreutils \
+
+    - name: Build
+      run: make docker_image
+    - name: Test
+      run: make check
+    - name: Clean
+      run: make clean
+

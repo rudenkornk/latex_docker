@@ -3,6 +3,9 @@
 Docker image for LaTeX CI.
 Includes TeXLive full installation as well as draw.io package
 
+[![GitHub Actions Status](https://github.com/rudenkornk/docker_latex/actions/workflows/workflow.yml/badge.svg)](https://github.com/rudenkornk/docker_latex/actions)
+
+
 ## Build
 ```shell
 make docker_image
