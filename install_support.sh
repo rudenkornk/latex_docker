@@ -6,6 +6,7 @@ echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select tr
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   make \
+  file \
   msttcorefonts \
   python3-pygments \
   ttf-mscorefonts-installer \
