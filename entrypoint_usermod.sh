@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 if [[ ! -z "$CI_UID" ]]; then
-    if [[ $CI_UID -lt 1000 ]]; then
-        echo "ERROR: CI user id must be >= 1000!"
+    if [[ "$CI_UID" == "0" ]]; then
+        echo "ERROR: CI user must not be root!"
         exit 1
     fi
     # No need to change ownership in home dir since usermod does it itself
@@ -10,8 +10,8 @@ if [[ ! -z "$CI_UID" ]]; then
 fi
 
 if [[ ! -z "$CI_GID" ]]; then
-    if [[ $CI_GID -lt 1000 ]]; then
-        echo "ERROR: CI group id must be >= 1000!"
+    if [[ "$CI_GID" == "0" ]]; then
+        echo "ERROR: CI group id must not be root!"
         exit 1
     fi
     groupmod --gid $CI_GID ci_user
