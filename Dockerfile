@@ -1,5 +1,6 @@
 FROM ubuntu:20.04
 
+# First, ask system administrator to install necessary packages
 USER root
 WORKDIR /root
 
@@ -12,13 +13,21 @@ COPY install_drawio.sh ./
 RUN ./install_drawio.sh
 
 COPY install_support.sh ./
-RUN ./install_support.sh \
+RUN ./install_support.sh
+
+# Create new user for CI and temprorarily give them admin privileges
+# The latter is needed for changing user id to match id of user in the host system
+# Also, use /home/repo as mounting point, instead for home dir, since
+# entrypoint script can change ownership of everything in home dir
+RUN : \
   && adduser --disabled-password --gecos "" ci_user \
   && apt-get install sudo \
   && usermod --append --groups sudo ci_user \
   && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
-  && mkdir --parents --mode=777 /home/repo
+  && mkdir --parents --mode=777 /home/repo \
+  && echo "cd /home/repo" >> /home/ci_user/.profile
 
+# Second, install fonts and setup environment
 USER ci_user
 WORKDIR /home/ci_user
 
@@ -26,14 +35,14 @@ COPY --chown=ci_user \
   license.md \
   readme.md \
   config_user.sh \
+  ./
+RUN ./config_user.sh
+
+# Entrypoint allows to change ci_user's id and removes admin privileges from them
+COPY --chown=ci_user \
   entrypoint.sh \
   entrypoint_usermod.sh \
   ./
-# Use /home/repo as repository directory since
-# entrypoint script can change ownership of everything in home dir
-RUN ./config_user.sh \
-  && echo "cd /home/repo" >> ~/.profile
-
 WORKDIR "/home/repo"
 ENTRYPOINT ["/home/ci_user/entrypoint.sh"]
 
