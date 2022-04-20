@@ -53,10 +53,11 @@ LABEL org.opencontainers.image.vendor="Nikita Rudenko"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.title="Docker image for LaTeX CI"
 LABEL org.opencontainers.image.base.name="ubuntu:20.04"
-LABEL org.opencontainers.image.source="https://github.com/rudenkornk/docker_latex"
 
 ARG IMAGE_NAME
 LABEL org.opencontainers.image.ref.name="${IMAGE_NAME}"
+LABEL org.opencontainers.image.url="https://hub.docker.com/repository/docker/${IMAGE_NAME}"
+LABEL org.opencontainers.image.source="https://github.com/${IMAGE_NAME}"
 
 ARG VERSION
 LABEL org.opencontainers.image.version="${VERSION}"
