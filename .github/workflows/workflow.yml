@@ -25,8 +25,17 @@ jobs:
         sudo apt-get install \
           moreutils \
 
+    - name: Set environment
+      run: echo "IMAGE_NAME=$(make --question docker_image_name)" >> $GITHUB_ENV
+    - name: Download cache from Docker Hub
+      # Here we assume that latest release have common layers that should speed up our build
+      run: |
+        docker manifest inspect $IMAGE_NAME:latest &> /dev/null && \
+        docker pull $IMAGE_NAME:latest
     - name: Build
-      run: make docker_image
+      run: |
+        DOCKER_CACHE_FROM=$IMAGE_NAME:latest \
+        make docker_image
     - name: Test
       run: make check
     - name: Clean
