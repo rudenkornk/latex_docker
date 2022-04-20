@@ -10,6 +10,12 @@ Includes TeXLive full installation as well as draw.io package
 ```shell
 make docker_image
 ```
+Also, you can use Docker Hub image as cache source:
+```shell
+docker pull rudenkornk/docker_latex:latest
+DOCKER_CACHE_FROM=rudenkornk/docker_latex:latest make docker_image
+```
+
 
 ## Test
 ```shell
