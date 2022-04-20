@@ -37,6 +37,10 @@ DOCKER_DEPS += entrypoint_usermod.sh
 .PHONY: docker_image
 docker_image: $(DOCKER_IMAGE)
 
+.PHONY: docker_image_name
+docker_image_name:
+	$(info $(DOCKER_IMAGE_NAME))
+
 DOCKER_IMAGE_ID = $(shell docker images --quiet $(DOCKER_IMAGE_TAG))
 DOCKER_IMAGE_CREATE_STATUS = $(shell [[ -z "$(DOCKER_IMAGE_ID)" ]] && echo "$(DOCKER_IMAGE)_not_created")
 DOCKER_CACHE_FROM_COMMAND = $(shell [[ ! -z "$(DOCKER_CACHE_FROM)" ]] && echo "--cache-from $(DOCKER_CACHE_FROM)")
