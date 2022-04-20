@@ -17,7 +17,7 @@ RUN ./install_support.sh
 
 # Create new user for CI and temprorarily give them admin privileges
 # The latter is needed for changing user id to match id of user in the host system
-# Also, use /home/repo as mounting point, instead for home dir, since
+# Also, use /home/repo as mounting point, instead of home dir, since
 # entrypoint script can change ownership of everything in home dir
 RUN : \
   && adduser --disabled-password --gecos "" ci_user \
