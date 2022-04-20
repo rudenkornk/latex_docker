@@ -13,7 +13,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Check status
+    - name: Show machine info
       run: |
         id
         df -h
