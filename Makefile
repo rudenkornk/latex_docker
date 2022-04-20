@@ -1,6 +1,6 @@
 SHELL = /usr/bin/env bash
 
-VERSION ?= 0.1.0
+VERSION ?= 0.1.1
 VERSION := $(VERSION)
 VCS_REF ?= $(shell git rev-parse HEAD)
 VCS_REF := $(VCS_REF)
