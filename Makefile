@@ -71,6 +71,7 @@ endif
 		--name $(DOCKER_CONTAINER_NAME) \
 		--mount type=bind,source="$(CI_BIND_MOUNT)",target=/home/repo \
 		$(DOCKER_IMAGE_TAG)
+	sleep 1
 	mkdir --parents $(BUILD_DIR) && touch $@
 
 .PHONY: docker_test_container
@@ -89,6 +90,7 @@ endif
 		--name $(DOCKER_TEST_CONTAINER_NAME) \
 		--mount type=bind,source="$$(pwd)",target=/home/repo \
 		$(DOCKER_IMAGE_TAG)
+	sleep 1
 	mkdir --parents $(BUILD_DIR) && touch $@
 
 $(BUILD_DIR)/drawio_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/drawio_test.xml
