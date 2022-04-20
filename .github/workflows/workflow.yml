@@ -26,7 +26,8 @@ jobs:
           moreutils \
 
     - name: Set environment
-      run: echo "IMAGE_NAME=$(make --question docker_image_name)" >> $GITHUB_ENV
+      run: |
+        echo "IMAGE_NAME=$(make --question docker_image_name)" >> $GITHUB_ENV
     - name: Download cache from Docker Hub
       # Here we assume that latest release have common layers that should speed up our build
       run: |
