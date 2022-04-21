@@ -28,6 +28,12 @@ RUN : \
   && mkdir --parents --mode=777 /home/repo \
   && echo "cd /home/repo" >> /home/ci_user/.profile
 
+# Tweak image for GitHub Actions
+RUN : \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    git \
+  && mkdir --parents --mode=777 /__w
+
 # Second, install fonts and setup environment
 USER ci_user
 WORKDIR /home/ci_user
