@@ -71,7 +71,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOCKEN }}
     - name: "[DEPLOY] Check there is not already such tag on Docker Hub"
       if: env.IS_DEPLOY == 'true'
-      run: $(docker manifest inspect $IMAGE_TAG &> /dev/null) && exit 1
+      run: $(docker manifest inspect $IMAGE_TAG &> /dev/null) && exit 1 || exit 0
     - name: "[DEPLOY] Push image to Docker Hub"
       if: env.IS_DEPLOY == 'true'
       run: |
