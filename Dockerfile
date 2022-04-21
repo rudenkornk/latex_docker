@@ -21,7 +21,8 @@ RUN ./install_support.sh
 # entrypoint script can change ownership of everything in home dir
 RUN : \
   && adduser --disabled-password --gecos "" ci_user \
-  && apt-get install sudo \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    sudo \
   && usermod --append --groups sudo ci_user \
   && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
   && mkdir --parents --mode=777 /home/repo \
