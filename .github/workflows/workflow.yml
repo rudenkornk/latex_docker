@@ -34,9 +34,6 @@ jobs:
 
     - name: Set environment
       run: |
-        echo "IMAGE_NAME=$(make --question docker_image_name)" >> $GITHUB_ENV
-        echo "IMAGE_TAG=$(make --question docker_image_tag)" >> $GITHUB_ENV
-        echo "IMAGE_VERSION=$(make --question docker_image_version)" >> $GITHUB_ENV
         IS_DEPLOY=$( \
           [[ \
             ( \
@@ -49,6 +46,9 @@ jobs:
             ) \
           ]] && echo true || echo false
         )
+        echo "IMAGE_NAME=$(make --question docker_image_name)" >> $GITHUB_ENV
+        echo "IMAGE_TAG=$(make --question docker_image_tag)" >> $GITHUB_ENV
+        echo "IMAGE_VERSION=$(make --question docker_image_version)" >> $GITHUB_ENV
         echo "IS_DEPLOY=$IS_DEPLOY" >> $GITHUB_ENV
     - name: Download cache from Docker Hub
       # Here we assume that latest release have common layers that should speed up our build
