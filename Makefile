@@ -45,6 +45,10 @@ docker_image_name:
 docker_image_tag:
 	$(info $(DOCKER_IMAGE_TAG))
 
+.PHONY: docker_image_version
+docker_image_version:
+	$(info $(DOCKER_IMAGE_VERSION))
+
 DOCKER_IMAGE_ID = $(shell docker images --quiet $(DOCKER_IMAGE_TAG))
 DOCKER_IMAGE_CREATE_STATUS = $(shell [[ -z "$(DOCKER_IMAGE_ID)" ]] && echo "$(DOCKER_IMAGE)_not_created")
 DOCKER_CACHE_FROM_COMMAND = $(shell [[ ! -z "$(DOCKER_CACHE_FROM)" ]] && echo "--cache-from $(DOCKER_CACHE_FROM)")
