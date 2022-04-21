@@ -1,6 +1,11 @@
 name: Workflow
 on:
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Should this run deploy image"
+        required: false
+        default: 'false'
   push:
     branches:
     - main
@@ -28,6 +33,21 @@ jobs:
     - name: Set environment
       run: |
         echo "IMAGE_NAME=$(make --question docker_image_name)" >> $GITHUB_ENV
+        echo "IMAGE_TAG=$(make --question docker_image_tag)" >> $GITHUB_ENV
+        echo "IMAGE_VERSION=$(make --question docker_image_version)" >> $GITHUB_ENV
+        IS_DEPLOY=$( \
+          [[ \
+            ( \
+              '${{ github.event_name }}' == 'push' && \
+              '${{ contains(github.event.head_commit.message, '[DEPLOY]') }}' == 'true' \
+            ) || \
+            ( \
+             '${{ github.event_name }}' == 'workflow_dispatch' && \
+             '${{ github.event.inputs.deploy }}' == 'true' \
+            ) \
+          ]] && echo true || echo false
+        )
+        echo "IS_DEPLOY=$IS_DEPLOY" >> $GITHUB_ENV
     - name: Download cache from Docker Hub
       # Here we assume that latest release have common layers that should speed up our build
       run: |
@@ -41,4 +61,25 @@ jobs:
       run: make check
     - name: Clean
       run: make clean
+    - name: "[DEPLOY] Login to Docker Hub"
+      if: env.IS_DEPLOY == 'true'
+      uses: docker/login-action@v1
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOCKEN }}
+    - name: "[DEPLOY] Check there is not already such tag on Docker Hub"
+      if: env.IS_DEPLOY == 'true'
+      run: $(docker manifest inspect $IMAGE_TAG &> /dev/null) && exit 1
+    - name: "[DEPLOY] Push image to Docker Hub"
+      if: env.IS_DEPLOY == 'true'
+      run: |
+        docker tag $IMAGE_TAG $IMAGE_NAME:latest
+        docker push $IMAGE_TAG
+        docker push $IMAGE_NAME:latest
+    - name: "[DEPLOY] Tag commit"
+      if: env.IS_DEPLOY == 'true'
+      uses: tvdias/github-tagger@v0.0.1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        tag: "v${{ env.IMAGE_VERSION }}"
 
