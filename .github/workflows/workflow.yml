@@ -75,7 +75,7 @@ jobs:
     - name: Build
       run: |
         DOCKER_CACHE_FROM=$IMAGE_NAME:latest \
-        make docker_image
+        make $IMAGE_NAME
     - name: Test
       run: make check
     - name: Clean

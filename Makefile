@@ -36,8 +36,8 @@ DOCKER_DEPS += entrypoint.sh
 DOCKER_DEPS += entrypoint_usermod.sh
 DOCKER_DEPS += entrypoint_continue.sh
 
-.PHONY: docker_image
-docker_image: $(DOCKER_IMAGE)
+.PHONY: $(DOCKER_IMAGE_NAME)
+$(DOCKER_IMAGE_NAME): $(DOCKER_IMAGE)
 
 .PHONY: docker_image_name
 docker_image_name:
@@ -65,8 +65,8 @@ $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 		--tag $(DOCKER_IMAGE_TAG) .
 	mkdir --parents $(BUILD_DIR) && touch $@
 
-.PHONY: docker_container
-docker_container: $(DOCKER_CONTAINER)
+.PHONY: $(DOCKER_CONTAINER_NAME)
+$(DOCKER_CONTAINER_NAME): $(DOCKER_CONTAINER)
 
 DOCKER_CONTAINER_ID = $(shell docker container ls --quiet --all --filter name=^/$(DOCKER_CONTAINER_NAME)$)
 DOCKER_CONTAINER_STATE = $(shell docker container ls --format {{.State}} --all --filter name=^/$(DOCKER_CONTAINER_NAME)$)
@@ -85,8 +85,8 @@ endif
 	sleep 1
 	mkdir --parents $(BUILD_DIR) && touch $@
 
-.PHONY: docker_test_container
-docker_test_container: $(DOCKER_TEST_CONTAINER)
+.PHONY: $(DOCKER_TEST_CONTAINER_NAME)
+$(DOCKER_TEST_CONTAINER_NAME): $(DOCKER_TEST_CONTAINER)
 
 DOCKER_TEST_CONTAINER_ID = $(shell docker container ls --quiet --all --filter name=^/$(DOCKER_TEST_CONTAINER_NAME)$)
 DOCKER_TEST_CONTAINER_STATE = $(shell docker container ls --format {{.State}} --all --filter name=^/$(DOCKER_TEST_CONTAINER_NAME)$)
