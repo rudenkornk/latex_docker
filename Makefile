@@ -10,7 +10,7 @@ TESTS_DIR ?= tests
 TESTS_DIR := $(TESTS_DIR)
 CI_BIND_MOUNT ?= $(shell pwd)
 CI_BIND_MOUNT := $(CI_BIND_MOUNT)
-DOCKER_IMAGE_VERSION ?= 0.2.1
+DOCKER_IMAGE_VERSION ?= 0.3.0
 DOCKER_IMAGE_VERSION := $(DOCKER_IMAGE_VERSION)
 DOCKER_BASE_NAME ?= docker_latex
 DOCKER_BASE_NAME := $(DOCKER_BASE_NAME)
@@ -31,6 +31,7 @@ DOCKER_DEPS += install_texlive.sh
 DOCKER_DEPS += install_drawio.sh
 DOCKER_DEPS += install_support.sh
 DOCKER_DEPS += config_user.sh
+DOCKER_DEPS += config_github_actions.sh
 DOCKER_DEPS += entrypoint.sh
 DOCKER_DEPS += entrypoint_usermod.sh
 
@@ -75,6 +76,7 @@ ifneq ($(DOCKER_CONTAINER_ID),)
 	docker container rename $(DOCKER_CONTAINER_NAME) $(DOCKER_CONTAINER_NAME)_$(DOCKER_CONTAINER_ID)
 endif
 	docker run --interactive --tty --detach \
+		--user ci_user \
 		--env CI_UID="$$(id --user)" --env CI_GID="$$(id --group)" \
 		--name $(DOCKER_CONTAINER_NAME) \
 		--mount type=bind,source="$(CI_BIND_MOUNT)",target=/home/repo \
@@ -94,6 +96,7 @@ ifneq ($(DOCKER_TEST_CONTAINER_ID),)
 	docker container rename $(DOCKER_TEST_CONTAINER_NAME) $(DOCKER_TEST_CONTAINER_NAME)_$(DOCKER_TEST_CONTAINER_ID)
 endif
 	docker run --interactive --tty --detach \
+		--user ci_user \
 		--env CI_UID="$$(id --user)" --env CI_GID="$$(id --group)" \
 		--name $(DOCKER_TEST_CONTAINER_NAME) \
 		--mount type=bind,source="$$(pwd)",target=/home/repo \
@@ -110,28 +113,42 @@ $(BUILD_DIR)/drawio_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/drawio_test.
 $(BUILD_DIR)/latex_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/latex_test.tex
 	docker exec \
 		$(DOCKER_TEST_CONTAINER_NAME) \
-		latexmk -pdf --output-directory=$(BUILD_DIR) $(TESTS_DIR)/latex_test.tex
+		bash -c "source ~/.profile && latexmk -pdf --output-directory=$(BUILD_DIR) $(TESTS_DIR)/latex_test.tex"
 	touch $@ && file $@ | grep --quiet ' PDF '
 
 $(BUILD_DIR)/env_test: $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER)
 	docker exec \
+		--user ci_user \
 		$(DOCKER_TEST_CONTAINER_NAME) \
 		bash -c "source ~/.profile && env" | grep --quiet DRAWIO_CMD
 	docker run \
+		--user ci_user \
 		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
 		$(DOCKER_IMAGE_TAG) \
 		env | grep --quiet DRAWIO_CMD
+	
 	docker exec \
+		--user root \
+		--env GITHUB_ACTIONS=true --env GITHUB_ENV=/root/env \
 		$(DOCKER_TEST_CONTAINER_NAME) \
-		pwd | grep --quiet /home/repo
+		bash -c "/home/ci_user/config_github_actions.sh &> /dev/null && cat /root/env" \
+		| grep --quiet DRAWIO_CMD
+	
+	docker exec \
+		--user ci_user \
+		$(DOCKER_TEST_CONTAINER_NAME) \
+		bash -c "source ~/.profile && pwd" | grep --quiet /home/repo
 	docker run \
+		--user ci_user \
 		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
 		$(DOCKER_IMAGE_TAG) \
 		pwd | grep --quiet /home/repo
+	
 	mkdir --parents $(BUILD_DIR) && touch $@
 
 $(BUILD_DIR)/ci_id_test: $(DOCKER_IMAGE) $(TESTS_DIR)/id_test.sh
 	docker run \
+		--user ci_user \
 		--env CI_UID="1234" --env CI_GID="1432" \
 		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
 		--mount type=bind,source="$$(pwd)",target=/home/repo \
@@ -141,9 +158,8 @@ $(BUILD_DIR)/ci_id_test: $(DOCKER_IMAGE) $(TESTS_DIR)/id_test.sh
 	sed -n "2p" < $(BUILD_DIR)/ci_id | grep --quiet "ci_user:ci_user"
 	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "sudo"
 	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "docker"
-	# check we did not change host directory ownership
-	stat --format="%U:%G" . | grep --quiet $$(id --user --name):$$(id --group --name)
 	docker run \
+		--user ci_user \
 		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
 		--mount type=bind,source="$$(pwd)",target=/home/repo \
 		$(DOCKER_IMAGE_TAG) \
@@ -153,6 +169,14 @@ $(BUILD_DIR)/ci_id_test: $(DOCKER_IMAGE) $(TESTS_DIR)/id_test.sh
 	sed -n "3p" < $(BUILD_DIR)/ci_id | grep --quiet --invert-match "docker"
 	mkdir --parents $(BUILD_DIR) && touch $@
 
+# Check we did not change host directory ownership
+$(BUILD_DIR)/ownership_test: $(DOCKER_IMAGE)
+	stat --format="%U:%G %n" * > $(BUILD_DIR)/file_stat
+	stat --format="%U:%G %n" */* >> $(BUILD_DIR)/file_stat
+	GREP_COUNT=$$(grep --count $$(id --user --name):$$(id --group --name) $(BUILD_DIR)/file_stat); \
+	TOTAL_COUNT=$$(wc --lines < $(BUILD_DIR)/file_stat); \
+	[[ $$GREP_COUNT == $$TOTAL_COUNT ]] || exit 1
+	mkdir --parents $(BUILD_DIR) && touch $@
 
 .PHONY: check
 check: \
@@ -160,6 +184,7 @@ check: \
 	$(BUILD_DIR)/latex_test.pdf \
 	$(BUILD_DIR)/env_test \
 	$(BUILD_DIR)/ci_id_test \
+	$(BUILD_DIR)/ownership_test \
 
 
 .PHONY: clean
