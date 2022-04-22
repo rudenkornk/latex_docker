@@ -59,7 +59,7 @@ jobs:
       run: # some build steps
 ```
 
-Here, `/home/ci_user/config_github_actions.sh` is used to set `DRAWIO_CMD` and some specific texlive environmet variables.
+Here, `/home/ci_user/config_github_actions.sh` is used to set `DRAWIO_CMD` and some specific texlive environment variables.
 It can be skipped if you do not use draw.io
 
 ### 2. Use image for your local testing
