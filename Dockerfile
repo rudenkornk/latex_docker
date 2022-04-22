@@ -66,6 +66,7 @@ COPY --chown=ci_user \
   config_github_actions.sh \
   entrypoint.sh \
   entrypoint_usermod.sh \
+  entrypoint_continue.sh \
   /home/ci_user/
 
 ENTRYPOINT ["/home/ci_user/entrypoint.sh"]

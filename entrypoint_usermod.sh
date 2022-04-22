@@ -22,7 +22,7 @@ fi
 sudo deluser --quiet ci_user sudo
 source /home/ci_user/.profile
 if [[ $# -gt 0 ]]; then
-    exec sudo --preserve-env --user=$USER -- $@
+    exec sudo --preserve-env --user=$USER -- /home/ci_user/entrypoint_continue.sh $@
 else
     exec sudo --preserve-env --user=$USER -- bash
 fi
