@@ -20,9 +20,10 @@ fi
 
 # Drop privileges and execute next container command, or 'bash' if not specified.
 sudo deluser --quiet ci_user sudo
+source /home/ci_user/.profile
 if [[ $# -gt 0 ]]; then
-    exec sudo --login --user=$USER -- "$@"
+    exec sudo --preserve-env --user=$USER -- $@
 else
-    exec sudo --login --user=$USER -- bash
+    exec sudo --preserve-env --user=$USER -- bash
 fi
 
