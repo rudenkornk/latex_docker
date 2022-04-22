@@ -34,6 +34,7 @@ DOCKER_DEPS += config_user.sh
 DOCKER_DEPS += config_github_actions.sh
 DOCKER_DEPS += entrypoint.sh
 DOCKER_DEPS += entrypoint_usermod.sh
+DOCKER_DEPS += entrypoint_continue.sh
 
 .PHONY: docker_image
 docker_image: $(DOCKER_IMAGE)
@@ -132,6 +133,13 @@ $(BUILD_DIR)/env_test: $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER)
 		--env GITHUB_ACTIONS=true --env GITHUB_ENV=/root/env \
 		$(DOCKER_TEST_CONTAINER_NAME) \
 		bash -c "/home/ci_user/config_github_actions.sh &> /dev/null && cat /root/env" \
+		| grep --quiet DRAWIO_CMD
+	docker run \
+		--user root \
+		--name $(DOCKER_TEST_CONTAINER_NAME)_tmp_$$RANDOM \
+		--env GITHUB_ACTIONS=true --env GITHUB_ENV=/root/env \
+		$(DOCKER_IMAGE_TAG) \
+		"/home/ci_user/config_github_actions.sh &> /dev/null && cat /root/env" \
 		| grep --quiet DRAWIO_CMD
 	
 	docker exec \
