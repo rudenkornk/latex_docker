@@ -114,6 +114,13 @@ $(BUILD_DIR)/latex_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/latex_test.te
 		bash -c "source ~/.profile && latexmk -pdf --output-directory=$(BUILD_DIR) $(TESTS_DIR)/latex_test.tex"
 	touch $@ && file $@ | grep --quiet ' PDF '
 
+$(BUILD_DIR)/latexindent_test: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/latex_test.tex $(TESTS_DIR)/latexindent_test.tex
+	docker exec \
+		$(DOCKER_TEST_CONTAINER_NAME) \
+		bash -c "source ~/.profile && latexindent $(TESTS_DIR)/latex_test.tex &> $(BUILD_DIR)/latexindent_test.tex"
+	cmp $(BUILD_DIR)/latexindent_test.tex $(TESTS_DIR)/latexindent_test.tex
+	touch $@
+
 $(BUILD_DIR)/env_test: $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER)
 	docker exec \
 		--user ci_user \
@@ -145,6 +152,7 @@ $(BUILD_DIR)/env_test: $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER)
 check: \
 	$(BUILD_DIR)/drawio_test.pdf \
 	$(BUILD_DIR)/latex_test.pdf \
+	$(BUILD_DIR)/latexindent_test \
 	$(BUILD_DIR)/env_test \
 
 
