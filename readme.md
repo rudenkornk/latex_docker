@@ -41,9 +41,21 @@ make clean
 ## Different use cases for this repository
 This repository supports three different scenarios
 
-### 1. Use it in your LaTeX CI
-For example, in GitHub Actions that might look like:
+### 1. Use image directly for local testing or CI
 
+```shell
+docker run --interactive --tty \
+  --user ci_user \
+  --env CI_UID="$(id --user)" --env CI_GID="$(id --group)" \
+  --mount type=bind,source="$(pwd)",target=/home/repo \
+  rudenkornk/docker_latex:latest
+```
+
+Instead of `$(pwd)` use path to your LaTeX repo.
+It is recommended to mount it into `/home/repo`.
+Be careful if mounting inside `ci_user`'s home directory (`/home/ci_user`): entrypoint script will change rights to what is written in `CI_UID` and `CI_GID` vars of everything inside home directory.
+
+### 2. Use it with native GitHub Actions support (not recommended)
 ```yaml
 jobs:
   build:
@@ -60,21 +72,11 @@ jobs:
 ```
 
 Here, `/home/ci_user/config_github_actions.sh` is used to set `DRAWIO_CMD` and some specific texlive environment variables.
-It can be skipped if you do not use draw.io
+It can be skipped if you do not use draw.io.
 
-### 2. Use image for your local testing
-
-```shell
-docker run --interactive --tty \
-  --user ci_user \
-  --env CI_UID="$(id --user)" --env CI_GID="$(id --group)" \
-  --mount type=bind,source="$(pwd)",target=/home/repo \
-  rudenkornk/docker_latex:latest
-```
-
-Instead of `$(pwd)` use path to your LaTeX repo.
-It is recommended to mount it into `/home/repo`.
-Be careful if mounting inside `ci_user`'s home directory (`/home/ci_user`): entrypoint script will change rights to what is written in `CI_UID` and `CI_GID` vars of everything inside home directory.
+Using it this way is not recommended, because GitHub Actions run commands as root and do not load any custom environment from the image.
+Instead, it is better to use image directly in GitHub Actions script.
+See also https://github.com/rudenkornk/docker_ci#2-use-it-in-github-actions
 
 ### 3. Use scripts from this repository to setup your own system:
 
