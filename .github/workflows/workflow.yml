@@ -31,6 +31,7 @@ jobs:
       run: |
         sudo apt-get install \
           moreutils \
+          poppler-utils \
 
     - name: Set environment
       run: |

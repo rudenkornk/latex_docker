@@ -109,13 +109,14 @@ $(BUILD_DIR)/drawio_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/drawio_test.
 	docker exec \
 		$(DOCKER_TEST_CONTAINER_NAME) \
 		bash -c "source ~/.profile && \$$DRAWIO_CMD --export --output $@ $(TESTS_DIR)/drawio_test.xml --no-sandbox"
-	file $@ | grep --quiet ' PDF '
+	pdfinfo $@
 
 $(BUILD_DIR)/latex_test.pdf: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/latex_test.tex
 	docker exec \
 		$(DOCKER_TEST_CONTAINER_NAME) \
 		bash -c "source ~/.profile && latexmk -pdf --output-directory=$(BUILD_DIR) $(TESTS_DIR)/latex_test.tex"
-	touch $@ && file $@ | grep --quiet ' PDF '
+	touch $@ # touch file in case latexmk decided not to recompile
+	pdfinfo $@
 
 $(BUILD_DIR)/latexindent_test: $(DOCKER_TEST_CONTAINER) $(TESTS_DIR)/latex_test.tex $(TESTS_DIR)/latexindent_test.tex
 	docker exec \
