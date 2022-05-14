@@ -84,7 +84,7 @@ See also https://github.com/rudenkornk/docker_ci#2-use-it-in-github-actions
 # First, ask system administrator to install necessary packages
 sudo ./install_texlive.sh
 sudo ./install_drawio.sh
-sudo ./install_support.sh
+sudo ./config_system.sh
 
 # Second, install fonts and setup environment
 ./config_user.sh
