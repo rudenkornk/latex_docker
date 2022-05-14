@@ -30,7 +30,7 @@ DOCKER_DEPS :=
 DOCKER_DEPS += Dockerfile
 DOCKER_DEPS += install_texlive.sh
 DOCKER_DEPS += install_drawio.sh
-DOCKER_DEPS += install_support.sh
+DOCKER_DEPS += config_system.sh
 DOCKER_DEPS += config_user.sh
 DOCKER_DEPS += config_github_actions.sh
 

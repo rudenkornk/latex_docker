@@ -12,8 +12,8 @@ RUN ./install_texlive.sh
 COPY install_drawio.sh ./
 RUN ./install_drawio.sh
 
-COPY install_support.sh ./
-RUN ./install_support.sh
+COPY config_system.sh ./
+RUN ./config_system.sh
 
 # Second, install fonts and setup environment
 USER ci_user
