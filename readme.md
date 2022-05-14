@@ -61,7 +61,7 @@ jobs:
   build:
     runs-on: "ubuntu-20.04"
     container:
-      image: rudenkornk/docker_latex:0.3.0
+      image: rudenkornk/docker_latex:1.0.0
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
