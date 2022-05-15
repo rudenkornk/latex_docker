@@ -9,14 +9,15 @@ echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select tr
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   file \
-  gcc \
-  libc6-dev \
+  gcc `# for latexindent` \
+  libc6-dev `# for latexindent` \
   make \
   msttcorefonts \
-  poppler-utils \
-  python3-pygments \
+  poppler-utils `# for pdfinfo tests` \
+  python3-pygments `# for minted latex package` \
   ttf-mscorefonts-installer \
 
+# Perl packages for latexindent
 (echo y)|cpan
 cpan install YAML::Tiny
 cpan install File::HomeDir
