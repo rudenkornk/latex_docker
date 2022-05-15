@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-set -x
+set -o errexit
+set -o pipefail
+set -o nounset
+#set -o xtrace
 
 echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections
 apt-get update
