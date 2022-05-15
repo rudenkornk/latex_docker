@@ -13,8 +13,8 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   libc6-dev \
   make \
   msttcorefonts \
-  python3-pygments \
   poppler-utils \
+  python3-pygments \
   ttf-mscorefonts-installer \
 
 (echo y)|cpan
