@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
-set -x
+source /home/ci_user/.profile
 
-if [[ $GITHUB_ACTIONS != true ]]; then
+set -o errexit
+set -o pipefail
+set -o nounset
+#set -o xtrace
+
+if [[ ${GITHUB_ACTIONS:-} != true ]]; then
   exit
 fi
 
-source /home/ci_user/.profile
 TEXLIVEHOME=$(find /home/ci_user -type d -name .texlive*)
 
 echo "TEXMFVAR=$TEXLIVEHOME/texmf-var" >> $GITHUB_ENV
