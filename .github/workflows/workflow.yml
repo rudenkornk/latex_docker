@@ -72,7 +72,7 @@ jobs:
       # Here we assume that latest release have common layers that should speed up our build
       run: |
         docker manifest inspect $IMAGE_NAME:latest &> /dev/null && \
-        docker pull $IMAGE_NAME:latest
+        docker pull $IMAGE_NAME:latest || echo "Cache was not loaded"
     - name: Build
       run: |
         DOCKER_CACHE_FROM=$IMAGE_NAME:latest \
