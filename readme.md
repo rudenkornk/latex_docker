@@ -7,23 +7,23 @@ Includes TeXLive full installation as well as draw.io package
 
 
 ## Build
-```shell
+```bash
 make rudenkornk/docker_latex
 ```
 Also, you can use Docker Hub image as cache source:
-```shell
+```bash
 docker pull rudenkornk/docker_latex:latest
 DOCKER_CACHE_FROM=rudenkornk/docker_latex:latest make rudenkornk/docker_latex
 ```
 
 
 ## Test
-```shell
+```bash
 make check
 ```
 
 ## Run
-```shell
+```bash
 CI_BIND_MOUNT=$(pwd) make docker_latex_container
 
 docker attach docker_latex_container
@@ -32,7 +32,7 @@ docker exec -it docker_latex_container bash -c "source ~/.profile && bash"
 ```
 
 ## Clean
-```shell
+```bash
 make clean
 # Optionally clean entire docker system and remove ALL containers
 ./clean_all_docker.sh
@@ -43,7 +43,7 @@ This repository supports three different scenarios
 
 ### 1. Use image directly for local testing or CI
 
-```shell
+```bash
 docker run --interactive --tty \
   --user ci_user \
   --env CI_UID="$(id --user)" --env CI_GID="$(id --group)" \
@@ -80,7 +80,7 @@ See also https://github.com/rudenkornk/docker_ci#2-use-it-in-github-actions
 
 ### 3. Use scripts from this repository to setup your own system:
 
-```shell
+```bash
 # First, ask system administrator to install necessary packages
 sudo ./install_texlive.sh
 sudo ./install_drawio.sh
