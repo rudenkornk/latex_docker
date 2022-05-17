@@ -19,13 +19,13 @@ RUN ./config_system.sh
 USER ci_user
 WORKDIR /home/ci_user
 
+COPY --chown=ci_user config_user.sh ./
+RUN ./config_user.sh
+
 COPY --chown=ci_user \
   license.md \
   readme.md \
-  config_user.sh \
-  config_github_actions.sh \
   ./
-RUN ./config_user.sh
 
 WORKDIR /home/repo
 
