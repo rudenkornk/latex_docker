@@ -8,6 +8,7 @@ set -o nounset
 echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+  bash-completion \
   file \
   gcc `# for latexindent` \
   libc6-dev `# for latexindent` \
