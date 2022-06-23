@@ -8,12 +8,12 @@ Includes TeXLive full installation as well as draw.io package
 
 ## Build
 ```bash
-make rudenkornk/docker_latex
+make image
 ```
 Also, you can use Docker Hub image as cache source:
 ```bash
 docker pull rudenkornk/docker_latex:latest
-DOCKER_CACHE_FROM=rudenkornk/docker_latex:latest make rudenkornk/docker_latex
+DOCKER_CACHE_FROM=rudenkornk/docker_latex:latest make image
 ```
 
 
@@ -24,7 +24,7 @@ make check
 
 ## Run
 ```bash
-make docker_latex_container
+make container
 
 docker attach docker_latex_container
 # OR
