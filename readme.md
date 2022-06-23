@@ -28,7 +28,7 @@ make container
 
 docker attach docker_latex_container
 # OR
-docker exec -it docker_latex_container bash -c "source ~/.profile && bash"
+docker exec -it docker_latex_container bash -c "<COMMAND>"
 ```
 
 ## Clean
@@ -71,8 +71,8 @@ jobs:
       run: # some build steps
 ```
 
-Here, `/home/ci_user/config_github_actions.sh` is used to set `DRAWIO_CMD` and some specific texlive environment variables.
-It can be skipped if you do not use draw.io.
+Here, `/home/ci_user/config_github_actions.sh` is used to set some LaTeX paths, for example to support larm* fonts.
+It can be skipped most of times.
 
 Using it this way is not recommended, because GitHub Actions run commands as root and do not load any custom environment from the image.
 Instead, it is better to use image directly in GitHub Actions script.
