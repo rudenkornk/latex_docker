@@ -22,8 +22,11 @@ DOCKER_DEPS += config_system.sh
 DOCKER_DEPS += config_user.sh
 DOCKER_DEPS += config_github_actions.sh
 
-.PHONY: $(DOCKER_IMAGE_NAME)
-$(DOCKER_IMAGE_NAME): $(DOCKER_IMAGE)
+.PHONY: image
+image: $(DOCKER_IMAGE)
+
+.PHONY: container
+container: $(DOCKER_CONTAINER)
 
 .PHONY: docker_image_name
 docker_image_name:
@@ -52,9 +55,6 @@ $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 		--build-arg BUILD_DATE="$(BUILD_DATE)" \
 		--tag $(DOCKER_IMAGE_TAG) .
 	mkdir --parents $(BUILD_DIR) && touch $@
-
-.PHONY: $(DOCKER_CONTAINER_NAME)
-$(DOCKER_CONTAINER_NAME): $(DOCKER_CONTAINER)
 
 DOCKER_CONTAINER_ID != $(IF_DOCKERD_UP) && docker container ls --quiet --all --filter name=^/$(DOCKER_CONTAINER_NAME)$
 DOCKER_CONTAINER_STATE != $(IF_DOCKERD_UP) && docker container ls --format {{.State}} --all --filter name=^/$(DOCKER_CONTAINER_NAME)$
