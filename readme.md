@@ -24,7 +24,7 @@ make check
 
 ## Run
 ```bash
-CI_BIND_MOUNT=$(pwd) make docker_latex_container
+make docker_latex_container
 
 docker attach docker_latex_container
 # OR
