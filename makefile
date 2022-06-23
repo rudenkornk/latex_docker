@@ -6,7 +6,7 @@ TESTS_DIR := tests
 VCS_REF != git rev-parse HEAD
 BUILD_DATE != date --rfc-3339=date
 KEEP_CI_USER_SUDO ?= false
-DOCKER_IMAGE_VERSION := 1.0.3
+DOCKER_IMAGE_VERSION := 1.0.4
 DOCKER_IMAGE_NAME := rudenkornk/$(PROJECT_NAME)
 DOCKER_IMAGE_TAG := $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_VERSION)
 DOCKER_IMAGE := $(BUILD_DIR)/$(PROJECT_NAME)_image_$(DOCKER_IMAGE_VERSION)
@@ -78,56 +78,28 @@ endif
 $(BUILD_DIR)/drawio_test.pdf: $(DOCKER_CONTAINER) $(TESTS_DIR)/drawio_test.xml
 	docker exec \
 		$(DOCKER_CONTAINER_NAME) \
-		bash -c "source ~/.profile && \$$DRAWIO_CMD --export --output $@ $(TESTS_DIR)/drawio_test.xml --no-sandbox"
+		bash -c "drawio --export --output $@ $(TESTS_DIR)/drawio_test.xml"
 	pdfinfo $@
 
 $(BUILD_DIR)/latex_test.pdf: $(DOCKER_CONTAINER) $(TESTS_DIR)/latex_test.tex
 	docker exec \
 		$(DOCKER_CONTAINER_NAME) \
-		bash -c "source ~/.profile && latexmk -pdf --output-directory=$(BUILD_DIR) $(TESTS_DIR)/latex_test.tex"
+		bash -c "latexmk -pdf --output-directory=$(BUILD_DIR) $(TESTS_DIR)/latex_test.tex"
 	touch $@ # touch file in case latexmk decided not to recompile
 	pdfinfo $@
 
 $(BUILD_DIR)/latexindent_test: $(DOCKER_CONTAINER) $(TESTS_DIR)/latex_test.tex $(TESTS_DIR)/latexindent_test.tex
 	docker exec \
 		$(DOCKER_CONTAINER_NAME) \
-		bash -c "source ~/.profile && latexindent $(TESTS_DIR)/latex_test.tex &> $(BUILD_DIR)/latexindent_test.tex"
+		bash -c "latexindent $(TESTS_DIR)/latex_test.tex &> $(BUILD_DIR)/latexindent_test.tex"
 	cmp $(BUILD_DIR)/latexindent_test.tex $(TESTS_DIR)/latexindent_test.tex
 	touch $@
-
-$(BUILD_DIR)/env_test: $(DOCKER_IMAGE) $(DOCKER_CONTAINER)
-	docker exec \
-		--user ci_user \
-		$(DOCKER_CONTAINER_NAME) \
-		bash -c "source ~/.profile && env" | grep --quiet DRAWIO_CMD
-	docker run \
-		--user ci_user \
-		--name $(DOCKER_CONTAINER_NAME)_tmp_$$RANDOM \
-		$(DOCKER_IMAGE_TAG) \
-		env | grep --quiet DRAWIO_CMD
-	
-	docker exec \
-		--user root \
-		--env GITHUB_ACTIONS=true --env GITHUB_ENV=/root/env \
-		$(DOCKER_CONTAINER_NAME) \
-		bash -c "/home/ci_user/config_github_actions.sh &> /dev/null && cat /root/env" \
-		| grep --quiet DRAWIO_CMD
-	docker run \
-		--user root \
-		--name $(DOCKER_CONTAINER_NAME)_tmp_$$RANDOM \
-		--env GITHUB_ACTIONS=true --env GITHUB_ENV=/root/env \
-		$(DOCKER_IMAGE_TAG) \
-		"/home/ci_user/config_github_actions.sh &> /dev/null && cat /root/env" \
-		| grep --quiet DRAWIO_CMD
-	
-	mkdir --parents $(BUILD_DIR) && touch $@
 
 .PHONY: check
 check: \
 	$(BUILD_DIR)/drawio_test.pdf \
 	$(BUILD_DIR)/latex_test.pdf \
 	$(BUILD_DIR)/latexindent_test \
-	$(BUILD_DIR)/env_test \
 
 
 .PHONY: clean

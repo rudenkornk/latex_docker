@@ -16,4 +16,10 @@ wget https://github.com/jgraph/drawio-desktop/releases/download/v17.4.2/drawio-a
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ./drawio*.deb
 
 rm ./drawio*.deb
+rm /usr/bin/drawio
+
+echo '#!/usr/bin/env bash' >> /usr/bin/drawio
+echo 'PASSED_COMMAND=$@' >> /usr/bin/drawio
+echo 'xvfb-run /opt/drawio/drawio $PASSED_COMMAND --no-sandbox' >> /usr/bin/drawio
+chmod 755 /usr/bin/drawio
 
