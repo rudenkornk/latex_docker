@@ -78,7 +78,7 @@ Using it this way is not recommended, because GitHub Actions run commands as roo
 Instead, it is better to use image directly in GitHub Actions script.
 See also https://github.com/rudenkornk/docker_ci#2-use-it-in-github-actions
 
-### 3. Use scripts from this repository to setup your own system:
+### 3. Use scripts from this repository to setup your own system
 
 ```bash
 # First, ask system administrator to install necessary packages
