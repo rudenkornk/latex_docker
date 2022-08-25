@@ -9,10 +9,8 @@ KEEP_CI_USER_SUDO ?= false
 DOCKER_IMAGE_VERSION := 1.1.0
 DOCKER_IMAGE_NAME := rudenkornk/$(PROJECT_NAME)
 DOCKER_IMAGE_TAG := $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_VERSION)
-DOCKER_IMAGE := $(BUILD_DIR)/$(PROJECT_NAME)_image_$(DOCKER_IMAGE_VERSION)
 DOCKER_CACHE_FROM ?=
 DOCKER_CONTAINER_NAME := $(PROJECT_NAME)_container
-DOCKER_CONTAINER := $(BUILD_DIR)/$(DOCKER_CONTAINER_NAME)_$(DOCKER_IMAGE_VERSION)
 
 DOCKER_DEPS :=
 DOCKER_DEPS += Dockerfile
@@ -23,10 +21,10 @@ DOCKER_DEPS += config_user.sh
 DOCKER_DEPS += config_github_actions.sh
 
 .PHONY: image
-image: $(DOCKER_IMAGE)
+image: $(BUILD_DIR)/image
 
 .PHONY: container
-container: $(DOCKER_CONTAINER)
+container: $(BUILD_DIR)/container
 
 .PHONY: docker_image_name
 docker_image_name:
@@ -43,10 +41,10 @@ docker_image_version:
 IF_DOCKERD_UP := command -v docker &> /dev/null && docker image ls &> /dev/null
 
 DOCKER_IMAGE_ID != $(IF_DOCKERD_UP) && docker images --quiet $(DOCKER_IMAGE_TAG)
-DOCKER_IMAGE_CREATE_STATUS != [[ -z "$(DOCKER_IMAGE_ID)" ]] && echo "$(DOCKER_IMAGE)_not_created"
+DOCKER_IMAGE_CREATE_STATUS != [[ -z "$(DOCKER_IMAGE_ID)" ]] && echo "image_not_created"
 DOCKER_CACHE_FROM_OPTION != [[ ! -z "$(DOCKER_CACHE_FROM)" ]] && echo "--cache-from $(DOCKER_CACHE_FROM)"
-.PHONY: $(DOCKER_IMAGE)_not_created
-$(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
+.PHONY: image_not_created
+$(BUILD_DIR)/image: $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 	docker build \
 		$(DOCKER_CACHE_FROM_OPTION) \
 		--build-arg IMAGE_NAME="$(DOCKER_IMAGE_NAME)" \
@@ -58,9 +56,9 @@ $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 
 DOCKER_CONTAINER_ID != $(IF_DOCKERD_UP) && docker container ls --quiet --all --filter name=^/$(DOCKER_CONTAINER_NAME)$
 DOCKER_CONTAINER_STATE != $(IF_DOCKERD_UP) && docker container ls --format {{.State}} --all --filter name=^/$(DOCKER_CONTAINER_NAME)$
-DOCKER_CONTAINER_RUN_STATUS != [[ "$(DOCKER_CONTAINER_STATE)" != "running" ]] && echo "$(DOCKER_CONTAINER)_not_running"
-.PHONY: $(DOCKER_CONTAINER)_not_running
-$(DOCKER_CONTAINER): $(DOCKER_IMAGE) $(DOCKER_CONTAINER_RUN_STATUS)
+DOCKER_CONTAINER_RUN_STATUS != [[ "$(DOCKER_CONTAINER_STATE)" != "running" ]] && echo "container_not_running"
+.PHONY: container_not_running
+$(BUILD_DIR)/container: $(BUILD_DIR)/image $(DOCKER_CONTAINER_RUN_STATUS)
 ifneq ($(DOCKER_CONTAINER_ID),)
 	docker container rename $(DOCKER_CONTAINER_NAME) $(DOCKER_CONTAINER_NAME)_$(DOCKER_CONTAINER_ID)
 endif
@@ -75,20 +73,20 @@ endif
 	sleep 1
 	mkdir --parents $(BUILD_DIR) && touch $@
 
-$(BUILD_DIR)/drawio_test.pdf: $(DOCKER_CONTAINER) $(TESTS_DIR)/drawio_test.xml
+$(BUILD_DIR)/drawio_test.pdf: $(BUILD_DIR)/container $(TESTS_DIR)/drawio_test.xml
 	docker exec \
 		$(DOCKER_CONTAINER_NAME) \
 		bash -c "drawio --export --output $@ $(TESTS_DIR)/drawio_test.xml"
 	pdfinfo $@
 
-$(BUILD_DIR)/latex_test.pdf: $(DOCKER_CONTAINER) $(TESTS_DIR)/latex_test.tex
+$(BUILD_DIR)/latex_test.pdf: $(BUILD_DIR)/container $(TESTS_DIR)/latex_test.tex
 	docker exec \
 		$(DOCKER_CONTAINER_NAME) \
 		bash -c "latexmk -pdf --output-directory=$(BUILD_DIR) $(TESTS_DIR)/latex_test.tex"
 	touch $@ # touch file in case latexmk decided not to recompile
 	pdfinfo $@
 
-$(BUILD_DIR)/latexindent_test: $(DOCKER_CONTAINER) $(TESTS_DIR)/latex_test.tex $(TESTS_DIR)/latexindent_test.tex
+$(BUILD_DIR)/latexindent_test: $(BUILD_DIR)/container $(TESTS_DIR)/latex_test.tex $(TESTS_DIR)/latexindent_test.tex
 	docker exec \
 		$(DOCKER_CONTAINER_NAME) \
 		bash -c "latexindent $(TESTS_DIR)/latex_test.tex &> $(BUILD_DIR)/latexindent_test.tex"
