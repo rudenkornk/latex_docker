@@ -50,6 +50,8 @@ jobs:
           WILL_BE_DEPLOYED="true"
         fi
         # shellcheck disable=SC2129
+        IS_DEPLOY="true"
+        WILL_BE_DEPLOYED="true"
         echo "IS_DEPLOY=$IS_DEPLOY" >> "$GITHUB_ENV"
         echo "WILL_BE_DEPLOYED=$WILL_BE_DEPLOYED" >> "$GITHUB_ENV"
 
