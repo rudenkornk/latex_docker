@@ -68,7 +68,13 @@ jobs:
         echo "REMOTE_IMAGE_LATEST=$REMOTE_IMAGE_LATEST" >> "$GITHUB_ENV"
     - name: Check tag is not in registry
       if: env.WILL_BE_DEPLOYED == 'true'
-      run: make assert_not_pushed
+      run: |
+        TOKEN=$(curl --silent "https://$REGISTRY/token?scope=repository:$IMAGE_NAME:pull" | jq --raw-output '.token')
+        INDEX=$(curl --silent -H "Authorization: Bearer $TOKEN" https://"$REGISTRY"/v2/"$IMAGE_NAME"/tags/list | jq --raw-output ".tags | index(\"$IMAGE_TAG\")")
+        if [[ "$INDEX" != "null" ]]; then
+          echo "Image tag $IMAGE_TAG already exists on $REGISTRY!"
+          exit 1
+        fi
 
     - name: Download cache from registry
       # Here we assume that latest release have common layers that should speed up our build
