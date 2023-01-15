@@ -95,10 +95,15 @@ $(BUILD_DIR)/tests/latexindent_test.tex: $(BUILD_DIR)/container $(TESTS_DIR)/lat
 	cmp $@ $(TESTS_DIR)/latexindent_test.tex
 	touch $@
 
-$(BUILD_DIR)/tests/username_test: $(BUILD_DIR)/container $(TESTS_DIR)/latex_test.tex $(TESTS_DIR)/latexindent_test.tex
+$(BUILD_DIR)/tests/username_test: $(BUILD_DIR)/container
 	container_name=$$(podman exec --workdir "$$(pwd)" $(CONTAINER_NAME) \
 		bash -c "id --user --name") && \
 	[[ "$$container_name" == "$$(id --user --name)" ]]
+	touch $@
+
+$(BUILD_DIR)/tests/readme_test: readme.md
+	readme_version=$$(grep --perl-regexp --only-matching "rudenkornk/latex_image:\K\d+\.\d+\.\d+" readme.md) && \
+	[[ "$$readme_version" == "$(IMAGE_TAG)" ]]
 	touch $@
 
 .PHONY: check
@@ -107,13 +112,7 @@ check: \
 	$(BUILD_DIR)/tests/latex_test.pdf \
 	$(BUILD_DIR)/tests/latexindent_test.tex \
 	$(BUILD_DIR)/tests/username_test \
-
-
-.PHONY: assert_not_pushed
-assert_not_pushed:
-	token=$$(curl --silent https://$(REGISTRY)/token\?scope\="repository:$(IMAGE_NAME):pull" | jq --raw-output '.token') && \
-	index=$$(curl --silent -H "Authorization: Bearer $$token" https://$(REGISTRY)/v2/$(IMAGE_NAME)/tags/list | jq --raw-output '.tags | index("$(IMAGE_TAG)")') && \
-	[[ $$index == "null" ]] || { echo "Image tag '$(IMAGE_TAG)' already exists on $(REGISTRY)!"; exit 1; }
+	$(BUILD_DIR)/tests/readme_test \
 
 
 .PHONY: clean
