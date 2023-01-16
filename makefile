@@ -102,7 +102,7 @@ $(BUILD_DIR)/tests/username_test: $(BUILD_DIR)/container
 	touch $@
 
 $(BUILD_DIR)/tests/readme_test: readme.md
-	readme_version=$$(grep --perl-regexp --only-matching "rudenkornk/latex_image:\K\d+\.\d+\.\d+" readme.md) && \
+	readme_version=$$(grep --perl-regexp --only-matching "$(IMAGE_NAME):\K\d+\.\d+\.\d+" readme.md) && \
 	[[ "$$readme_version" == "$(IMAGE_TAG)" ]]
 	touch $@
 
@@ -122,6 +122,6 @@ clean:
 	rm --force $(BUILD_DIR)/*.fdb_latexmk
 	rm --force $(BUILD_DIR)/*.fls
 	rm --force $(BUILD_DIR)/*.log
-	podman container ls --quiet --filter name=^$(CONTAINER_NAME) |  xargs podman stop || true
+	podman container ls --quiet --filter name=^$(CONTAINER_NAME) | xargs podman stop || true
 	podman container ls --quiet --filter name=^$(CONTAINER_NAME) --all | xargs podman rm || true
 
