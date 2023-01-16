@@ -122,8 +122,6 @@ clean:
 	rm --force $(BUILD_DIR)/*.fdb_latexmk
 	rm --force $(BUILD_DIR)/*.fls
 	rm --force $(BUILD_DIR)/*.log
-	podman container ls --quiet --filter name=^$(CONTAINER_NAME) | \
-		ifne xargs podman stop
-	podman container ls --quiet --filter name=^$(CONTAINER_NAME) --all | \
-		ifne xargs podman rm
+	podman container ls --quiet --filter name=^$(CONTAINER_NAME) |  xargs podman stop || true
+	podman container ls --quiet --filter name=^$(CONTAINER_NAME) --all | xargs podman rm || true
 
