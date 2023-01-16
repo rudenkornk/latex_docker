@@ -33,7 +33,7 @@ make
 ```
 
 ## Test
-**Requirements:** Also `pdfinfo >= 22`, `ifne`  
+**Requirements:** Also `pdfinfo >= 22`  
 ```bash
 make check
 ```
