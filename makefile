@@ -2,23 +2,21 @@ SHELL = /usr/bin/env bash
 
 CACHE_FROM ?=
 
-PROJECT_NAME := latex_image
-BUILD_DIR := __build__
-BUILD_TESTS := $(BUILD_DIR)/tests
-TESTS_DIR := tests
+BASE_NAME := latex_ubuntu
+IMAGE_TAG := 22.0.0
+CONTAINERFILE := Containerfile
 
-IMAGE_TAG := 2.0.0
-IMAGE_NAME := rudenkornk/$(PROJECT_NAME)
+PROJECT := rudenkornk/latex_image
+BUILD_DIR := __build__/$(BASE_NAME)/$(IMAGE_TAG)
+BUILD_TESTS := $(BUILD_DIR)/tests
+CONTAINER_NAME := $(BASE_NAME)_cont
+IMAGE_NAME := rudenkornk/$(BASE_NAME)
 IMAGE_NAMETAG := $(IMAGE_NAME):$(IMAGE_TAG)
-CONTAINER_NAME := latex
+TESTS_DIR := tests
 VCS_REF != git rev-parse HEAD
 
-DEPS :=
-DEPS += Containerfile
-DEPS += install_texlive.sh
-DEPS += install_drawio.sh
-DEPS += config_system.sh
-DEPS += license.md
+DEPS != grep --perl-regexp --only-matching "COPY \K.*?(?= \S+$$)" $(CONTAINERFILE)
+DEPS += $(CONTAINERFILE)
 
 .PHONY: image
 image: $(BUILD_DIR)/image
@@ -46,9 +44,10 @@ $(BUILD_DIR)/image: $(DEPS) $(IMAGE_CREATE_STATUS)
 		--cache-from '$(CACHE_FROM)' \
 		--label "org.opencontainers.image.ref.name=$(IMAGE_NAME)" \
 		--label "org.opencontainers.image.revision=$(VCS_REF)" \
-		--label "org.opencontainers.image.source=https://github.com/$(IMAGE_NAME)" \
+		--label "org.opencontainers.image.source=https://github.com/$(PROJECT)" \
 		--label "org.opencontainers.image.version=$(IMAGE_TAG)" \
-		--tag $(IMAGE_NAMETAG) .
+		--tag $(IMAGE_NAMETAG) \
+		--file $(CONTAINERFILE) .
 	mkdir --parents $(BUILD_DIR) && touch $@
 
 CONTAINER_ID != podman container ls --quiet --all --filter name=^$(CONTAINER_NAME)$
