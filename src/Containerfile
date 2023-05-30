@@ -3,17 +3,20 @@ FROM docker.io/library/ubuntu:jammy-20230126
 WORKDIR /etc/configs
 
 # TeX Live creates a heavy layer, so install it as early as possible to allow caching
-COPY install_texlive.sh ./
+COPY src/install_texlive.sh ./
 RUN ./install_texlive.sh
 
 # drawio creates a heavy layer, so install it as early as possible to allow caching
 COPY \
-  install_drawio.sh \
-  drawio.sh \
+  src/install_drawio.sh \
+  src/drawio.sh \
   ./
 RUN ./install_drawio.sh
 
-COPY config_system.sh ./
+COPY src/install_basic_utils.sh ./
+RUN ./install_basic_utils.sh
+
+COPY src/config_system.sh ./
 RUN ./config_system.sh
 
 COPY license.md ./
