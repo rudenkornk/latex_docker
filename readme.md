@@ -5,8 +5,8 @@ Includes TeXLive full installation as well as draw.io package.
 
 [![GitHub Actions Status](https://github.com/rudenkornk/latex_image/actions/workflows/workflow.yml/badge.svg)](https://github.com/rudenkornk/latex_image/actions)
 
-
 ## Using the image
+
 ```bash
 # Bootstrap
 podman run --interactive --tty --detach \
@@ -27,18 +27,23 @@ podman exec --workdir "$(pwd)" --interactive --tty latex bash
 ```
 
 ## Build
-**Requirements:** `podman >= 3.4.4`, `GNU Make >= 4.3`  
+
+**Requirements:** `podman >= 3.4.4`, `GNU Make >= 4.3`
+
 ```bash
 make
 ```
 
 ## Test
-**Requirements:** Also `pdfinfo >= 22`  
+
+**Requirements:** Also `pdfinfo >= 22`
+
 ```bash
 make check
 ```
 
 ## Clean
+
 ```bash
 make clean
 ```
