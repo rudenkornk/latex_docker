@@ -5,11 +5,6 @@ set -o pipefail
 set -o nounset
 #set -o xtrace
 
-DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-  curl \
-  lsb-release \
-
-
 DISTRO=$(lsb_release --codename --short)
 ARCH=$(dpkg --print-architecture)
 PUBKEY=/etc/apt/trusted.gpg.d/nodejs.asc
