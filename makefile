@@ -3,7 +3,12 @@ SHELL = /usr/bin/env bash
 CACHE_FROM ?=
 
 BASE_NAME := latex_ubuntu
-IMAGE_TAG := 22.0.0
+
+ANCHOR := 6532d0d3418365b917ce95335d05c31e263ba8a3
+OFFSET := 0
+PATCH != echo $$(($$(git rev-list $(ANCHOR)..HEAD --count --first-parent) - $(OFFSET)))
+IMAGE_TAG := 22.0.$(PATCH)
+
 CONTAINERFILE := Containerfile
 
 PROJECT := rudenkornk/latex_image
@@ -35,6 +40,10 @@ image_nametag:
 .PHONY: image_tag
 image_tag:
 	$(info $(IMAGE_TAG))
+
+.PHONY: readme_nametag
+readme_nametag:
+	echo $$(grep --perl-regexp --only-matching "$(IMAGE_NAME):\d+\.\d+\.\d+" readme.md)
 
 .PHONY: $(BUILD_DIR)/not_ready
 
@@ -99,18 +108,12 @@ $(BUILD_TESTS)/username_test: $(BUILD_DIR)/container
 	[[ "$$container_name" == "$$(id --user --name)" ]]
 	touch $@
 
-$(BUILD_TESTS)/readme_test: readme.md
-	readme_version=$$(grep --perl-regexp --only-matching "$(IMAGE_NAME):\K\d+\.\d+\.\d+" readme.md) && \
-	[[ "$$readme_version" == "$(IMAGE_TAG)" ]]
-	touch $@
-
 .PHONY: check
 check: \
 	$(BUILD_TESTS)/drawio_test.pdf \
 	$(BUILD_TESTS)/latex_test.pdf \
 	$(BUILD_TESTS)/latexindent_test.tex \
 	$(BUILD_TESTS)/username_test \
-	$(BUILD_TESTS)/readme_test \
 
 
 .PHONY: clean
