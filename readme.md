@@ -16,7 +16,7 @@ podman run --interactive --tty --detach \
   --name latex \
   --userns keep-id `# keeps your non-root username` \
   --workdir "$HOME" `# podman sets homedir to the workdir for some reason` \
-  ghcr.io/rudenkornk/latex_ubuntu:22.0.7
+  ghcr.io/rudenkornk/latex_ubuntu:22.0.8
 podman exec --user root latex bash -c "chown $(id --user):$(id --group) $HOME"
 
 # Execute single command
