@@ -18,6 +18,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   bash-completion \
   file \
   gcc `# for latexindent` \
+  git \
   libc6-dev `# for latexindent` \
   make \
   msttcorefonts \
